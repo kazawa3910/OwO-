@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body { 
+            font-family: 'Courier New', Courier, monospace; /* ??t ki?u ch? thành ki?u ch? trong CMD */
+            background-color: #000; /* ??t n?n thành màu ?en */
+            color: #fff; /* ??t màu ch? thành màu tr?ng ?? d? ??c */
+        }
+        #messages { 
+            list-style-type: none; 
+            margin: 0; 
+            padding: 0; 
+        }
+        #messages li { 
+            padding: 8px; 
+            background-color: #333; /* ??t n?n tin nh?n thành màu xám ??m */
+            margin-bottom: 10px; 
+            color: #fff; /* ??t màu ch? tin nh?n thành màu tr?ng ?? d? ??c */
+        }
+        #form { 
+            display: flex; 
+        }
+        #input { 
+            flex-grow: 1; 
+            padding: 10px; 
+            background-color: #444; /* ??t n?n ô nh?p li?u thành màu xám ?en */
+            color: #fff; /* ??t màu ch? ô nh?p li?u thành màu tr?ng */
+            border: 1px solid #555; /* ??t ???ng vi?n ô nh?p li?u */
+        }
+        #send { 
+            padding: 10px; 
+            background-color: #1a1a1a; /* ??t n?n nút g?i thành màu xám nh?t */
+            color: #fff; /* ??t màu ch? nút g?i thành màu tr?ng */
+            border: 1px solid #777; /* ??t ???ng vi?n nút g?i */
+        }
+        #send:hover {
+            background-color: #1a1a1a; /* ??i màu n?n nút g?i khi di chu?t qua */
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Room</h1>
+    <div id="room-section">
+        <button id="createRoom">Create Room</button>
+        <input id="roomIdInput" placeholder="Enter Room ID" />
+        <button id="joinRoom">Join Room</button>
+    </div>
+    <ul id="messages"></ul>
+    <form id="form" action="" style="display: none;">
+        <input id="input" autocomplete="off" placeholder="Type your message..." /><button id="send">Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        document.getElementById('createRoom').addEventListener('click', function() {
+            socket.emit('createRoom');
+        });
+
+        document.getElementById('joinRoom').addEventListener('click', function() {
+            var roomId = document.getElementById('roomIdInput').value;
+            socket.emit('joinRoom', roomId);
+        });
+
+        socket.on('roomCreated', function(roomId) {
+            alert('Room created with ID: ' + roomId);
+            document.getElementById('roomIdInput').value = roomId;
+            document.getElementById('room-section').style.display = 'none';
+            document.getElementById('form').style.display = 'block';
+        });
+
+        socket.on('roomJoined', function(roomId) {
+            alert('Joined room with ID: ' + roomId);
+            document.getElementById('room-section').style.display = 'none';
+            document.getElementById('form').style.display = 'block';
+        });
+
+        socket.on('error', function(msg) {
+            alert(msg);
+        });
+
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                var roomId = document.getElementById('roomIdInput').value;
+                socket.emit('chat message', { roomId, msg: input.value });
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+    </script>
+</body>
+</html>
